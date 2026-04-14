@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout-pack
+    id="community.russian.qwerty"
+    name="Russian"
+    bottomStyle="gboard"
+    qwertyLike="true">
+
+    <row1>й ц у к е н г ш щ з х</row1>
+    <row2>ф ы в а п р о л д ж э</row2>
+    <row3>я ч с м и т ь б ю</row3>
+
+    <!-- Optional per-key long-press variants -->
+    <variants>
+        <key value="е">ё</key>
+		<key value="г">ґ</key>
+		<key value="и">і ї</key>
+        <key value="ь">ъ</key>
+        <key value="ф">ѳ</key>
+        <key value="э">є</key>
+    </variants>
+</layout-pack>
+
+<!-- xstallm was here -->
