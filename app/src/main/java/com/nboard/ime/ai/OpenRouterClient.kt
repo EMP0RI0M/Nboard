@@ -45,11 +45,13 @@ class OpenRouterClient(private val apiKey: String, private val userModel: String
             }
 
             val failure = result.exceptionOrNull()
-            if (failure is OpenRouterHttpException && failure.httpCode == 404) {
-                lastNotFoundError = failure
-            } else {
+            lastNotFoundError = failure as? Exception
+            
+            // Only stop trying fallbacks if the API key itself is definitively invalid
+            if (failure is OpenRouterHttpException && failure.httpCode == 401) {
                 return@withContext result
             }
+            // Otherwise, keep trying the next model (e.g. 400 bad request, 404 not found, 402 payment required)
         }
 
         Result.failure(lastNotFoundError ?: IOException("No compatible OpenRouter model available"))
@@ -147,6 +149,8 @@ class OpenRouterClient(private val apiKey: String, private val userModel: String
         private val MODEL_FALLBACKS = listOf(
             "google/gemini-2.5-flash",
             "google/gemini-2.0-flash-001",
+            "google/gemini-2.0-flash-lite-preview-02-05:free",
+            "google/gemini-2.0-pro-exp-02-05:free",
             "openai/gpt-4o-mini"
         )
     }
