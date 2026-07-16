@@ -42,6 +42,12 @@ enum class KeyboardFontMode(val value: String) {
     ROBOTO("roboto")
 }
 
+enum class AiProvider(val value: String) {
+    GEMINI("gemini"),
+    OPENROUTER("openrouter")
+}
+
+
 object KeyboardModeSettings {
     const val PREFS_NAME = "nboard_settings"
     private const val KEY_LEFT_MODE = "left_bottom_mode"
@@ -54,6 +60,8 @@ object KeyboardModeSettings {
     private const val KEY_ACTIVE_LAYOUT_PACK_ID = "active_layout_pack_id"
     private const val KEY_LANGUAGE_MODE = "keyboard_language_mode"
     private const val KEY_API_KEY = "gemini_api_key"
+    private const val KEY_OPENROUTER_API_KEY = "openrouter_api_key"
+    private const val KEY_AI_PROVIDER = "ai_provider"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_FONT_MODE = "font_mode"
     private const val KEY_WORD_PREDICTION_ENABLED = "word_prediction_enabled"
@@ -200,6 +208,32 @@ object KeyboardModeSettings {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_API_KEY, value.trim())
+            .apply()
+    }
+
+    fun loadOpenRouterApiKey(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_OPENROUTER_API_KEY, "")
+            .orEmpty()
+    }
+
+    fun saveOpenRouterApiKey(context: Context, value: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_OPENROUTER_API_KEY, value.trim())
+            .apply()
+    }
+
+    fun loadAiProvider(context: Context): AiProvider {
+        val raw = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_AI_PROVIDER, AiProvider.GEMINI.value)
+        return if (raw == AiProvider.OPENROUTER.value) AiProvider.OPENROUTER else AiProvider.GEMINI
+    }
+
+    fun saveAiProvider(context: Context, provider: AiProvider) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_AI_PROVIDER, provider.value)
             .apply()
     }
 

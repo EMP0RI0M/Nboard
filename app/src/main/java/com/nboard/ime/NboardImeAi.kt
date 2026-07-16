@@ -117,15 +117,15 @@ internal fun NboardImeService.submitAiPrompt() {
         )
     }
 
-    if (!geminiClient.isConfigured) {
-        toast("Gemini API key missing. AI is disabled")
+    if (!aiClient.isConfigured) {
+        toast("API key missing. AI is disabled")
         return
     }
 
     aiPromptInput.error = null
     setGenerating(true)
     serviceScope.launch {
-        val result = geminiClient.generateText(
+        val result = aiClient.generateText(
             prompt = resolvedPrompt,
             systemInstruction = AI_PROMPT_SYSTEM_INSTRUCTION,
             outputCharLimit = AI_REPLY_CHAR_LIMIT
@@ -158,8 +158,8 @@ internal fun NboardImeService.runQuickAiAction(action: QuickAiAction) {
         return
     }
 
-    if (!geminiClient.isConfigured) {
-        toast("Gemini API key missing. AI is disabled")
+    if (!aiClient.isConfigured) {
+        toast("API key missing. AI is disabled")
         return
     }
 
@@ -192,7 +192,7 @@ internal fun NboardImeService.runQuickAiAction(action: QuickAiAction) {
             )
         }
 
-        val result = geminiClient.generateText(
+        val result = aiClient.generateText(
             prompt = prompt,
             systemInstruction = AI_QUICK_ACTION_SYSTEM_INSTRUCTION,
             outputCharLimit = AI_PILL_CHAR_LIMIT

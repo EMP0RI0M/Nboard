@@ -317,18 +317,43 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showApiKeyDialog() {
+        val currentProvider = KeyboardModeSettings.loadAiProvider(this)
+        val options = arrayOf("Gemini", "OpenRouter")
+        val selected = if (currentProvider == AiProvider.OPENROUTER) 1 else 0
+
+        AlertDialog.Builder(this)
+            .setTitle("Select AI Provider")
+            .setSingleChoiceItems(options, selected) { dialog, which ->
+                val provider = if (which == 1) AiProvider.OPENROUTER else AiProvider.GEMINI
+                KeyboardModeSettings.saveAiProvider(this, provider)
+                dialog.dismiss()
+                showApiKeyInputDialog(provider)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showApiKeyInputDialog(provider: AiProvider) {
+        val isGemini = provider == AiProvider.GEMINI
+        val currentKey = if (isGemini) KeyboardModeSettings.loadGeminiApiKey(this) else KeyboardModeSettings.loadOpenRouterApiKey(this)
+        
         val input = EditText(this).apply {
-            setText(KeyboardModeSettings.loadGeminiApiKey(this@MainActivity))
-            hint = "Paste Gemini API key"
+            setText(currentKey)
+            hint = if (isGemini) "Paste Gemini API key" else "Paste OpenRouter API key"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             setSelection(text.length)
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Set Gemini API key")
+            .setTitle(if (isGemini) "Set Gemini API key" else "Set OpenRouter API key")
             .setView(input)
             .setPositiveButton("Save") { _, _ ->
-                KeyboardModeSettings.saveGeminiApiKey(this, input.text?.toString().orEmpty())
+                val newKey = input.text?.toString().orEmpty()
+                if (isGemini) {
+                    KeyboardModeSettings.saveGeminiApiKey(this, newKey)
+                } else {
+                    KeyboardModeSettings.saveOpenRouterApiKey(this, newKey)
+                }
                 refreshValues()
             }
             .setNegativeButton("Cancel", null)
@@ -547,7 +572,9 @@ class MainActivity : AppCompatActivity() {
     private fun refreshValues() {
         val activeLayoutPack = LayoutPackManager.resolveActive(this)
         val isGboardLayout = activeLayoutPack.isGboardStyle()
-        statusText.text = maskApiKeyForDisplay(KeyboardModeSettings.loadGeminiApiKey(this))
+        val provider = KeyboardModeSettings.loadAiProvider(this)
+        val apiKey = if (provider == AiProvider.OPENROUTER) KeyboardModeSettings.loadOpenRouterApiKey(this) else KeyboardModeSettings.loadGeminiApiKey(this)
+        statusText.text = "${if (provider == AiProvider.OPENROUTER) "OpenRouter" else "Gemini"}: " + maskApiKeyForDisplay(apiKey)
         languageValue.text = when (KeyboardModeSettings.loadLanguageMode(this)) {
             KeyboardLanguageMode.FRENCH -> "French"
             KeyboardLanguageMode.ENGLISH -> "English"

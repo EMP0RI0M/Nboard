@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class GeminiClient(private val apiKey: String) : AiClient {
+class OpenRouterClient(private val apiKey: String) : AiClient {
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -27,7 +27,7 @@ class GeminiClient(private val apiKey: String) : AiClient {
         outputCharLimit: Int
     ): Result<String> = withContext(Dispatchers.IO) {
         if (!isConfigured) {
-            return@withContext Result.failure(IllegalStateException("Gemini API key missing"))
+            return@withContext Result.failure(IllegalStateException("OpenRouter API key missing"))
         }
 
         var lastNotFoundError: Exception? = null
@@ -38,14 +38,14 @@ class GeminiClient(private val apiKey: String) : AiClient {
             }
 
             val failure = result.exceptionOrNull()
-            if (failure is GeminiHttpException && failure.httpCode == 404) {
+            if (failure is OpenRouterHttpException && failure.httpCode == 404) {
                 lastNotFoundError = failure
             } else {
                 return@withContext result
             }
         }
 
-        Result.failure(lastNotFoundError ?: IOException("No compatible Gemini model available"))
+        Result.failure(lastNotFoundError ?: IOException("No compatible OpenRouter model available"))
     }
 
     private fun generateWithModel(
@@ -54,34 +54,19 @@ class GeminiClient(private val apiKey: String) : AiClient {
         systemInstruction: String?,
         outputCharLimit: Int
     ): Result<String> {
-        val url =
-            "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
-        val requestJson = JSONObject()
-            .put(
-                "contents",
-                JSONArray().put(
-                    JSONObject().put(
-                        "parts",
-                        JSONArray().put(JSONObject().put("text", prompt))
-                    )
-                )
-            )
-            .put(
-                "generationConfig",
-                JSONObject()
-                    .put("temperature", 0.3)
-                    .put("maxOutputTokens", 256)
-            )
-
+        val url = "https://openrouter.ai/api/v1/chat/completions"
+        
+        val messages = JSONArray()
         if (!systemInstruction.isNullOrBlank()) {
-            requestJson.put(
-                "system_instruction",
-                JSONObject().put(
-                    "parts",
-                    JSONArray().put(JSONObject().put("text", systemInstruction.trim()))
-                )
-            )
+            messages.put(JSONObject().put("role", "system").put("content", systemInstruction.trim()))
         }
+        messages.put(JSONObject().put("role", "user").put("content", prompt))
+
+        val requestJson = JSONObject()
+            .put("model", model)
+            .put("messages", messages)
+            .put("temperature", 0.3)
+            .put("max_tokens", 256)
 
         val requestBody = requestJson
             .toString()
@@ -89,6 +74,9 @@ class GeminiClient(private val apiKey: String) : AiClient {
 
         val request = Request.Builder()
             .url(url)
+            .header("Authorization", "Bearer $apiKey")
+            .header("HTTP-Referer", "https://github.com/MathieuDvv/Nboard")
+            .header("X-Title", "Nboard")
             .post(requestBody)
             .build()
 
@@ -98,14 +86,14 @@ class GeminiClient(private val apiKey: String) : AiClient {
                 if (!response.isSuccessful) {
                     val errorMessage = extractApiErrorMessage(bodyString)
                     return Result.failure(
-                        GeminiHttpException(
+                        OpenRouterHttpException(
                             httpCode = response.code,
-                            detail = errorMessage ?: "Gemini request failed (${response.code})"
+                            detail = errorMessage ?: "OpenRouter request failed (${response.code})"
                         )
                     )
                 }
                 if (bodyString.isBlank()) {
-                    return Result.failure(IOException("Gemini returned an empty response"))
+                    return Result.failure(IOException("OpenRouter returned an empty response"))
                 }
 
                 val json = JSONObject(bodyString)
@@ -117,53 +105,25 @@ class GeminiClient(private val apiKey: String) : AiClient {
                     return Result.success(text)
                 }
 
-                val blockReason = json
-                    .optJSONObject("promptFeedback")
-                    ?.optString("blockReason")
-                    .orEmpty()
-                if (blockReason.isNotBlank()) {
-                    return Result.failure(IOException("Gemini blocked the prompt ($blockReason)"))
-                }
-
-                Result.failure(IOException("Gemini response had no text output"))
+                Result.failure(IOException("OpenRouter response had no text output"))
             }
         } catch (error: Exception) {
-            Result.failure(IOException(error.message ?: "Gemini request error", error))
+            Result.failure(IOException(error.message ?: "OpenRouter request error", error))
         }
     }
 
     private fun extractCandidateText(json: JSONObject): String {
-        val candidates = json.optJSONArray("candidates") ?: return ""
-        val output = StringBuilder()
-        for (i in 0 until candidates.length()) {
-            val parts = candidates
-                .optJSONObject(i)
-                ?.optJSONObject("content")
-                ?.optJSONArray("parts")
-                ?: continue
-
-            for (j in 0 until parts.length()) {
-                val text = parts.optJSONObject(j)?.optString("text").orEmpty().trim()
-                if (text.isNotBlank()) {
-                    if (output.isNotEmpty()) {
-                        output.append('\n')
-                    }
-                    output.append(text)
-                }
-            }
-
-            if (output.isNotEmpty()) {
-                break
-            }
+        val choices = json.optJSONArray("choices") ?: return ""
+        if (choices.length() > 0) {
+            return choices.optJSONObject(0)?.optJSONObject("message")?.optString("content").orEmpty().trim()
         }
-        return output.toString()
+        return ""
     }
 
     private fun extractApiErrorMessage(body: String): String? {
         if (body.isBlank()) {
             return null
         }
-
         return runCatching {
             JSONObject(body)
                 .optJSONObject("error")
@@ -171,16 +131,16 @@ class GeminiClient(private val apiKey: String) : AiClient {
         }.getOrNull()?.takeIf { it.isNotBlank() }
     }
 
-    private data class GeminiHttpException(
+    private data class OpenRouterHttpException(
         val httpCode: Int,
         val detail: String
     ) : IOException(detail)
 
     companion object {
         private val MODEL_FALLBACKS = listOf(
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest"
+            "google/gemini-2.5-flash",
+            "google/gemini-2.0-flash-001",
+            "openai/gpt-4o-mini"
         )
     }
 }

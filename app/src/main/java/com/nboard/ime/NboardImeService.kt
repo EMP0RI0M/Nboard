@@ -66,7 +66,9 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import com.nboard.ime.ai.AiClient
 import com.nboard.ime.ai.GeminiClient
+import com.nboard.ime.ai.OpenRouterClient
 import com.nboard.ime.clipboard.ClipboardHistoryStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,7 +90,7 @@ class NboardImeService : InputMethodService() {
     internal var clipboardManager: ClipboardManager? = null
     internal var vibrator: Vibrator? = null
     internal lateinit var clipboardHistoryStore: ClipboardHistoryStore
-    internal lateinit var geminiClient: GeminiClient
+    internal lateinit var aiClient: AiClient
     private var interTypeface: Typeface? = null
 
     internal lateinit var keyboardRoot: LinearLayout
@@ -404,9 +406,15 @@ class NboardImeService : InputMethodService() {
             KeyboardFontMode.ROBOTO -> Typeface.create("sans-serif", Typeface.NORMAL)
         }
 
-        val storedKey = KeyboardModeSettings.loadGeminiApiKey(this)
-        val apiKey = storedKey.ifBlank { BuildConfig.GEMINI_API_KEY }
-        geminiClient = GeminiClient(apiKey)
+        val aiProvider = KeyboardModeSettings.loadAiProvider(this)
+        if (aiProvider == AiProvider.OPENROUTER) {
+            val storedKey = KeyboardModeSettings.loadOpenRouterApiKey(this)
+            aiClient = OpenRouterClient(storedKey)
+        } else {
+            val storedKey = KeyboardModeSettings.loadGeminiApiKey(this)
+            val apiKey = storedKey.ifBlank { BuildConfig.GEMINI_API_KEY }
+            aiClient = GeminiClient(apiKey)
+        }
     }
 
     private fun createKeyboardUiContext(): Context {
