@@ -87,7 +87,6 @@ internal fun NboardImeService.refreshUi() {
 
     refreshAutoShiftFromContext()
     refreshGboardPunctuationLabels()
-    setVisibleAnimated(aiQuickActionsRow, isAiMode)
     setVisibleAnimated(aiPromptRow, isAiMode)
     setVisibleAnimated(clipboardPanel, isClipboardOpen && !isEmojiMode)
     setVisibleAnimated(emojiPanel, isEmojiMode)

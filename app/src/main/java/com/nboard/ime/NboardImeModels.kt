@@ -15,10 +15,32 @@ internal enum class InlineInputTarget {
     EMOJI_SEARCH
 }
 
-internal enum class QuickAiAction {
-    SUMMARIZE,
-    FIX_GRAMMAR,
-    EXPAND
+internal enum class QuickAiAction(val label: String) {
+    SUMMARIZE("Summarize"),
+    FIX_GRAMMAR("Fix Grammar"),
+    EXPAND("Expand"),
+    REWRITE("Rewrite"),
+    SHORTEN("Shorten"),
+    TRANSLATE("Translate"),
+    IMPROVE_WRITING("Improve Writing"),
+    PROFESSIONAL("Professional"),
+    CASUAL("Casual"),
+    EXPLAIN_SIMPLER("Explain Simpler"),
+
+    // Intent Prediction / Living Quick Actions
+    DEBUG_CODE("Debug"),
+    OPTIMIZE_CODE("Optimize"),
+    EXPLAIN_CODE("Explain Code"),
+    SOLVE_STEP_BY_STEP("Solve Step-by-Step"),
+    CREATE_FLASHCARDS("Create Flashcards"),
+    GENERATE_QUIZ("Generate Quiz"),
+    CONTINUE_STORY("Continue Story"),
+    IMPROVE_STORY("Improve Story"),
+    CHANGE_TONE("Change Tone"),
+
+    // Workflow Chains
+    FIX_AND_HUMANIZE("Fix + Humanize"),
+    PROFESSIONAL_BULLETS("Pro Bullets")
 }
 
 internal data class ModeOption(val mode: BottomKeyMode, val iconRes: Int)

@@ -96,10 +96,11 @@ class NboardImeService : InputMethodService() {
     internal lateinit var keyboardRoot: LinearLayout
     internal lateinit var voiceInputGlow: View
     internal lateinit var swipeTrailView: SwipeTrailView
-    internal lateinit var aiQuickActionsRow: LinearLayout
-    internal lateinit var aiSummarizeButton: Button
-    internal lateinit var aiFixGrammarButton: Button
-    internal lateinit var aiExpandButton: Button
+    internal lateinit var aiSmartActionsScroll: HorizontalScrollView
+    internal lateinit var aiSmartActionsRow: LinearLayout
+    
+    
+    
     internal lateinit var aiPromptRow: FrameLayout
     internal lateinit var aiPromptToggleButton: ImageButton
     internal lateinit var aiPromptInput: EditText
@@ -153,6 +154,7 @@ class NboardImeService : InputMethodService() {
     internal var lastShiftTapAtMs = 0L
     internal var isClipboardOpen = false
     internal var isGenerating = false
+    internal var lastAiOriginalText: String? = null
     internal var isSymbolsSubmenuOpen = false
     internal var isEmojiMode = false
     internal var isEmojiSearchMode = false
@@ -346,6 +348,7 @@ class NboardImeService : InputMethodService() {
             renderEmojiSuggestions()
             renderRecentClipboardRow()
             refreshUi()
+            updateAiSmartActions()
         }
     }
 
@@ -462,6 +465,7 @@ class NboardImeService : InputMethodService() {
         if (::row1.isInitialized) {
             refreshAutoShiftFromContextAndRerender()
         }
+        updateAiSmartActions()
     }
 
     private fun reloadBottomModesFromSettings() {
@@ -506,10 +510,8 @@ class NboardImeService : InputMethodService() {
         voiceInputGlow = root.findViewById(R.id.voiceInputGlow)
         swipeTrailView = root.findViewById(R.id.swipeTrailView)
 
-        aiQuickActionsRow = root.findViewById(R.id.aiQuickActionsRow)
-        aiSummarizeButton = root.findViewById(R.id.aiSummarizeButton)
-        aiFixGrammarButton = root.findViewById(R.id.aiFixGrammarButton)
-        aiExpandButton = root.findViewById(R.id.aiExpandButton)
+        aiSmartActionsScroll = root.findViewById(R.id.aiSmartActionsScroll)
+        aiSmartActionsRow = root.findViewById(R.id.aiSmartActionsRow)
         aiPromptRow = root.findViewById(R.id.aiPromptRow)
         aiPromptToggleButton = root.findViewById(R.id.aiPromptToggleButton)
         aiPromptInput = root.findViewById(R.id.aiPromptInput)
@@ -577,10 +579,7 @@ class NboardImeService : InputMethodService() {
     private fun applyTypographyAndIcons() {
         keyboardRoot.background = uiDrawable(R.drawable.bg_keyboard_container)
         aiPromptRow.background = uiDrawable(R.drawable.bg_ai_pill)
-        aiQuickActionsRow.background = null
-        aiSummarizeButton.background = uiDrawable(R.drawable.bg_ai_quick_action)
-        aiFixGrammarButton.background = uiDrawable(R.drawable.bg_ai_quick_action)
-        aiExpandButton.background = uiDrawable(R.drawable.bg_ai_quick_action)
+        aiSmartActionsScroll.background = null
         aiPromptToggleButton.background = uiDrawable(R.drawable.bg_ai_button)
         modeSwitchButton.background = uiDrawable(R.drawable.bg_special_key)
         leftPunctuationButton.background = uiDrawable(R.drawable.bg_key)
@@ -604,9 +603,7 @@ class NboardImeService : InputMethodService() {
         applyInterTypeface(spaceButton)
         applyInterTypeface(rightPunctuationButton)
         rightPunctuationButton.textSize = 18f
-        applySerifTypeface(aiSummarizeButton)
-        applySerifTypeface(aiFixGrammarButton)
-        applySerifTypeface(aiExpandButton)
+
         applyInterTypeface(aiPromptInput)
         applyInterTypeface(emojiSearchInput)
         applyInterTypeface(recentClipboardChip)
@@ -614,9 +611,7 @@ class NboardImeService : InputMethodService() {
         applyInterTypeface(predictionWord2Button)
         applyInterTypeface(predictionWord3Button)
         aiPromptInput.filters = arrayOf(InputFilter.LengthFilter(AI_PILL_CHAR_LIMIT))
-        aiSummarizeButton.setTextColor(uiColor(R.color.ai_text))
-        aiFixGrammarButton.setTextColor(uiColor(R.color.ai_text))
-        aiExpandButton.setTextColor(uiColor(R.color.ai_text))
+
         modeSwitchButton.setTextColor(uiColor(R.color.key_text))
         leftPunctuationButton.setTextColor(uiColor(R.color.key_text))
         spaceButton.setTextColor(uiColor(R.color.space_text))
@@ -667,10 +662,7 @@ class NboardImeService : InputMethodService() {
         recentClipboardChip.minimumWidth = 0
         updateBottomModeIcons()
 
-        flattenView(aiQuickActionsRow)
-        flattenView(aiSummarizeButton)
-        flattenView(aiFixGrammarButton)
-        flattenView(aiExpandButton)
+        flattenView(aiSmartActionsScroll)
         flattenView(modeSwitchButton)
         flattenView(leftPunctuationButton)
         flattenView(spaceButton)
@@ -827,26 +819,6 @@ class NboardImeService : InputMethodService() {
             toggleAiMode()
         }
 
-        bindPressAction(aiSummarizeButton) {
-            if (!isAiAllowedInCurrentContext()) {
-                return@bindPressAction
-            }
-            runQuickAiAction(QuickAiAction.SUMMARIZE)
-        }
-
-        bindPressAction(aiFixGrammarButton) {
-            if (!isAiAllowedInCurrentContext()) {
-                return@bindPressAction
-            }
-            runQuickAiAction(QuickAiAction.FIX_GRAMMAR)
-        }
-
-        bindPressAction(aiExpandButton) {
-            if (!isAiAllowedInCurrentContext()) {
-                return@bindPressAction
-            }
-            runQuickAiAction(QuickAiAction.EXPAND)
-        }
 
         configureSpacebarTouch()
 
