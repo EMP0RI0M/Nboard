@@ -76,6 +76,20 @@ object KeyboardModeSettings {
         "return_to_letters_after_number_space_enabled"
     private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
 
+    private const val KEY_SEARXNG_URL = "searxng_url"
+
+    fun loadSearxngUrl(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_SEARXNG_URL, "https://searx.be") ?: "https://searx.be"
+    }
+
+    fun saveSearxngUrl(context: Context, url: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_SEARXNG_URL, url)
+            .apply()
+    }
+
     fun load(context: Context): Pair<BottomKeyMode, BottomKeyMode> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val (leftPrimary, leftSecondary) = loadBottomSlotOptionsInternal(prefs, true)

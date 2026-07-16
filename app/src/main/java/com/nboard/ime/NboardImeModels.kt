@@ -27,16 +27,53 @@ internal enum class QuickAiAction(val label: String) {
     CASUAL("Casual"),
     EXPLAIN_SIMPLER("Explain Simpler"),
 
-    // Intent Prediction / Living Quick Actions
+    // Developer Mode
     DEBUG_CODE("Debug"),
     OPTIMIZE_CODE("Optimize"),
     EXPLAIN_CODE("Explain Code"),
+    FIND_SECURITY_ISSUES("Find Security Issues"),
+    GENERATE_TESTS("Generate Tests"),
+    CONVERT_LANGUAGE("Convert Language"),
+    ADD_COMMENTS("Add Comments"),
+    GENERATE_DOCS("Generate Documentation"),
+
+    // Student Mode
     SOLVE_STEP_BY_STEP("Solve Step-by-Step"),
+    EXPLAIN_LIKE_10("Explain Like I'm 10"),
     CREATE_FLASHCARDS("Create Flashcards"),
     GENERATE_QUIZ("Generate Quiz"),
+    MIND_MAP("Mind Map"),
+    CORNELL_NOTES("Cornell Notes"),
+    IMPORTANT_QUESTIONS("Important Questions"),
+    FORMULA_SHEET("Formula Sheet"),
+
+    // Startup Mode
+    SWOT_ANALYSIS("SWOT Analysis"),
+    LEAN_CANVAS("Lean Canvas"),
+    BUSINESS_MODEL("Business Model"),
+    REVENUE_IDEAS("Revenue Ideas"),
+    INVESTOR_PITCH("Investor Pitch"),
+    ELEVATOR_PITCH("Elevator Pitch"),
+    MARKET_RESEARCH("Market Research"),
+    COMPETITOR_ANALYSIS("Competitor Analysis"),
+
+    // Chat Mode
+    SMART_REPLY("Smart Reply"),
+    FUNNY_REPLY("Funny Reply"),
+    PROFESSIONAL_REPLY("Professional Reply"),
+    POLITE_DECLINE("Polite Decline"),
+    CONTINUE_CONVERSATION("Continue Conversation"),
+
+    // Universal
+    FACT_CHECK("Fact Check"),
+    SEARCH_WEB("Search Web"),
+
+    // Creative / Writing
     CONTINUE_STORY("Continue Story"),
     IMPROVE_STORY("Improve Story"),
     CHANGE_TONE("Change Tone"),
+    MAKE_MORE_PERSUASIVE("Make More Persuasive"),
+    HUMANIZE("Humanize"),
 
     // Workflow Chains
     FIX_AND_HUMANIZE("Fix + Humanize"),

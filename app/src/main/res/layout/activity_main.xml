@@ -622,6 +622,35 @@
             android:background="@drawable/bg_settings_card"
             android:orientation="vertical">
 
+            
+            <LinearLayout
+                android:id="@+id/searxngUrlRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:text="SearXNG URL"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/wordPredictionRow"
                 android:layout_width="match_parent"
@@ -908,6 +937,8 @@
 
         <LinearLayout
             android:id="@+id/apiKeyRow"
+            <!-- Added via script -->
+
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="10dp"

@@ -183,90 +183,219 @@ internal fun NboardImeService.runQuickAiAction(action: QuickAiAction) {
     aiPromptInput.error = null
     setGenerating(true)
     serviceScope.launch {
+        var contextText = sourceText
+        if (action == QuickAiAction.SEARCH_WEB || action == QuickAiAction.FACT_CHECK) {
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                toast("Searching web...")
+            }
+            val searxngUrl = KeyboardModeSettings.loadSearxngUrl(this@runQuickAiAction)
+            val searchResults = SearxngClient.search(searxngUrl, sourceText)
+            contextText = "User Input/Query: $sourceText\n\nWeb Search Results Context:\n$searchResults"
+        }
+
         val prompt = when (action) {
             QuickAiAction.SUMMARIZE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Summarize this text. Preserve meaning. Return a short, concise version.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.FIX_GRAMMAR -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Fix grammar, punctuation, and spelling while keeping the same meaning and original tone.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.EXPAND -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Expand this text naturally with more detail. Improve the flow.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.REWRITE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Rewrite this naturally to improve readability. Do not change the meaning.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.SHORTEN -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Reduce the length of this text. Preserve important information.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.TRANSLATE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Translate this text into English (or if it is already English, translate it into the user's apparent native language or widely spoken language based on context).",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.IMPROVE_WRITING -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Improve the writing. Use better vocabulary, better sentence structure, and make it sound more natural.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.PROFESSIONAL -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Rewrite this text to sound highly professional, polite, and formal.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.CASUAL -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Rewrite this text to sound casual, friendly, and conversational.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.EXPLAIN_SIMPLER -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Explain this text in simpler terms so it is easier to understand.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.DEBUG_CODE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Find and fix bugs in this code. Return only the corrected code if possible.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.OPTIMIZE_CODE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Optimize this code for performance and readability. Return the optimized code.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.EXPLAIN_CODE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Add comments and explain what this code does.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.SOLVE_STEP_BY_STEP -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Solve this problem step-by-step and show the final answer clearly.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.CREATE_FLASHCARDS -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Convert this text into a set of question-and-answer flashcards.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.GENERATE_QUIZ -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Generate a short multiple choice quiz based on this text.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.CONTINUE_STORY -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Continue this story naturally.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.IMPROVE_STORY -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Improve the narrative flow, descriptions, and dialogue in this story.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.CHANGE_TONE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Rewrite this with a different, engaging tone.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.FIX_AND_HUMANIZE -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Fix all grammar issues and rewrite the text so it sounds completely natural and human, hiding any AI tone.",
-                selectedText = sourceText
+                selectedText = contextText
             )
             QuickAiAction.PROFESSIONAL_BULLETS -> buildLanguagePreservingSelectionPrompt(
                 instruction = "Rewrite this into a professional, concise bulleted list.",
-                selectedText = sourceText
+                selectedText = contextText
+            )
+            // Code
+            QuickAiAction.FIND_SECURITY_ISSUES -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Analyze this code and find any security vulnerabilities or bad practices. Return the secure code.",
+                selectedText = contextText
+            )
+            QuickAiAction.GENERATE_TESTS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Write unit tests for this code.",
+                selectedText = contextText
+            )
+            QuickAiAction.CONVERT_LANGUAGE -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Convert this code into another popular programming language.",
+                selectedText = contextText
+            )
+            QuickAiAction.ADD_COMMENTS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Add inline comments explaining the logic of this code.",
+                selectedText = contextText
+            )
+            QuickAiAction.GENERATE_DOCS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Generate formal documentation for this code.",
+                selectedText = contextText
+            )
+
+            // Student
+            QuickAiAction.EXPLAIN_LIKE_10 -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Explain this topic as if I am 10 years old.",
+                selectedText = contextText
+            )
+            QuickAiAction.MIND_MAP -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Create a structured text-based mind map of these concepts.",
+                selectedText = contextText
+            )
+            QuickAiAction.CORNELL_NOTES -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Organize this text into the Cornell Notes format (Cues, Notes, Summary).",
+                selectedText = contextText
+            )
+            QuickAiAction.IMPORTANT_QUESTIONS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Generate the most important exam questions based on this text.",
+                selectedText = contextText
+            )
+            QuickAiAction.FORMULA_SHEET -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Extract all mathematical or scientific formulas and definitions into a concise sheet.",
+                selectedText = contextText
+            )
+
+            // Startup
+            QuickAiAction.SWOT_ANALYSIS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Perform a SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats) on this idea.",
+                selectedText = contextText
+            )
+            QuickAiAction.LEAN_CANVAS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Draft a Lean Canvas model for this business idea.",
+                selectedText = contextText
+            )
+            QuickAiAction.BUSINESS_MODEL -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Outline a solid business model for this concept.",
+                selectedText = contextText
+            )
+            QuickAiAction.REVENUE_IDEAS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Suggest 5 creative ways to generate revenue from this idea.",
+                selectedText = contextText
+            )
+            QuickAiAction.INVESTOR_PITCH -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Rewrite this into a compelling pitch for angel investors or VCs.",
+                selectedText = contextText
+            )
+            QuickAiAction.ELEVATOR_PITCH -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Condense this into a powerful 30-second elevator pitch.",
+                selectedText = contextText
+            )
+            QuickAiAction.MARKET_RESEARCH -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Outline the target market and demographics for this idea.",
+                selectedText = contextText
+            )
+            QuickAiAction.COMPETITOR_ANALYSIS -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Identify potential competitors and how this idea can differentiate itself.",
+                selectedText = contextText
+            )
+
+            // Chat
+            QuickAiAction.SMART_REPLY -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Generate a smart, contextual reply to this message.",
+                selectedText = contextText
+            )
+            QuickAiAction.FUNNY_REPLY -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Generate a funny, witty reply to this message.",
+                selectedText = contextText
+            )
+            QuickAiAction.PROFESSIONAL_REPLY -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Generate a highly professional and polite reply.",
+                selectedText = contextText
+            )
+            QuickAiAction.POLITE_DECLINE -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Politely decline this request or offer.",
+                selectedText = contextText
+            )
+            QuickAiAction.CONTINUE_CONVERSATION -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Suggest a follow-up message to keep this conversation going.",
+                selectedText = contextText
+            )
+
+            // Universal
+            QuickAiAction.FACT_CHECK -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Fact-check this text. Point out any inaccuracies and provide the correct information.",
+                selectedText = contextText
+            )
+            QuickAiAction.SEARCH_WEB -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Search the web internally and provide a summary of the latest information regarding this topic.",
+                selectedText = contextText
+            )
+
+            // Creative / Writing
+            QuickAiAction.MAKE_MORE_PERSUASIVE -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Rewrite this to be highly persuasive and convincing.",
+                selectedText = contextText
+            )
+            QuickAiAction.HUMANIZE -> buildLanguagePreservingSelectionPrompt(
+                instruction = "Rewrite this so it sounds completely human, natural, and free of AI-like phrasing.",
+                selectedText = contextText
             )
         }
 
@@ -329,49 +458,69 @@ internal fun NboardImeService.updateAiSmartActions() {
     val actions = mutableListOf<QuickAiAction>()
     val lower = text.lowercase()
     
-    // Code context
+    // Code context (Developer Mode)
     if (text.contains("{") && (text.contains("def ") || text.contains("fun ") || text.contains("var ") || text.contains("let ") || text.contains("class "))) {
         actions.add(QuickAiAction.DEBUG_CODE)
-        actions.add(QuickAiAction.OPTIMIZE_CODE)
         actions.add(QuickAiAction.EXPLAIN_CODE)
+        actions.add(QuickAiAction.OPTIMIZE_CODE)
+        actions.add(QuickAiAction.FIND_SECURITY_ISSUES)
+        actions.add(QuickAiAction.GENERATE_TESTS)
+        actions.add(QuickAiAction.CONVERT_LANGUAGE)
+        actions.add(QuickAiAction.ADD_COMMENTS)
+        actions.add(QuickAiAction.GENERATE_DOCS)
     } 
-    // Homework / Question context
-    else if ((lower.contains("what is") || lower.contains("how to") || lower.contains("explain")) && text.contains("?")) {
+    // Homework / Question context (Student Mode)
+    else if (lower.contains("calculate") || lower.contains("theorem") || lower.contains("what is") || lower.contains("how to") || (lower.contains("explain") && text.contains("?"))) {
         actions.add(QuickAiAction.SOLVE_STEP_BY_STEP)
+        actions.add(QuickAiAction.EXPLAIN_LIKE_10)
         actions.add(QuickAiAction.CREATE_FLASHCARDS)
         actions.add(QuickAiAction.GENERATE_QUIZ)
-    } 
-    // Story / Creative context
+        actions.add(QuickAiAction.MIND_MAP)
+        actions.add(QuickAiAction.CORNELL_NOTES)
+        actions.add(QuickAiAction.IMPORTANT_QUESTIONS)
+        actions.add(QuickAiAction.FORMULA_SHEET)
+    }
+    // Startup / Business context (Startup Mode)
+    else if (lower.contains("startup") || lower.contains("business") || lower.contains("market") || lower.contains("revenue") || lower.contains("pitch")) {
+        actions.add(QuickAiAction.SWOT_ANALYSIS)
+        actions.add(QuickAiAction.LEAN_CANVAS)
+        actions.add(QuickAiAction.BUSINESS_MODEL)
+        actions.add(QuickAiAction.REVENUE_IDEAS)
+        actions.add(QuickAiAction.INVESTOR_PITCH)
+        actions.add(QuickAiAction.ELEVATOR_PITCH)
+        actions.add(QuickAiAction.MARKET_RESEARCH)
+        actions.add(QuickAiAction.COMPETITOR_ANALYSIS)
+    }
+    // Story / Creative context (Writing Mode)
     else if (lower.contains("once upon a time") || (lower.contains(" he ") && lower.contains(" she ") && lower.contains(" said "))) {
         actions.add(QuickAiAction.CONTINUE_STORY)
         actions.add(QuickAiAction.IMPROVE_STORY)
         actions.add(QuickAiAction.CHANGE_TONE)
+        actions.add(QuickAiAction.MAKE_MORE_PERSUASIVE)
+        actions.add(QuickAiAction.HUMANIZE)
     }
-    // Professional context
-    else if (lower.contains("dear ") || lower.contains("sincerely") || lower.contains("best regards") || lower.contains("attached")) {
-        actions.add(QuickAiAction.PROFESSIONAL)
-        actions.add(QuickAiAction.PROFESSIONAL_BULLETS)
-        actions.add(QuickAiAction.FIX_GRAMMAR)
-    } 
-    // Casual context
-    else if (lower.contains("hey") || lower.contains("lol") || lower.contains("haha") || lower.contains("brb") || lower.contains("lmao")) {
+    // Chat context (Chat Mode)
+    else if (text.length < 150 && !text.contains("\n\n")) {
+        actions.add(QuickAiAction.SMART_REPLY)
+        actions.add(QuickAiAction.FUNNY_REPLY)
+        actions.add(QuickAiAction.PROFESSIONAL_REPLY)
+        actions.add(QuickAiAction.POLITE_DECLINE)
+        actions.add(QuickAiAction.CONTINUE_CONVERSATION)
         actions.add(QuickAiAction.CASUAL)
-        actions.add(QuickAiAction.REWRITE)
-        actions.add(QuickAiAction.FIX_AND_HUMANIZE)
-    } 
-    // List / Summary context
-    else if (text.contains("•") || text.contains("- ") || lower.length > 200) {
+    }
+    // Default / Professional / Long form context
+    else {
         actions.add(QuickAiAction.SUMMARIZE)
         actions.add(QuickAiAction.PROFESSIONAL_BULLETS)
-        actions.add(QuickAiAction.SHORTEN)
-    } 
-    // Default context
-    else {
         actions.add(QuickAiAction.FIX_AND_HUMANIZE)
-        actions.add(QuickAiAction.FIX_GRAMMAR)
-        actions.add(QuickAiAction.REWRITE)
+        actions.add(QuickAiAction.SHORTEN)
         actions.add(QuickAiAction.EXPAND)
+        actions.add(QuickAiAction.PROFESSIONAL)
     }
+
+    // Always add universal actions at the end if they aren't there
+    if (!actions.contains(QuickAiAction.FACT_CHECK)) actions.add(QuickAiAction.FACT_CHECK)
+    if (!actions.contains(QuickAiAction.SEARCH_WEB)) actions.add(QuickAiAction.SEARCH_WEB)
 
     // Add remaining distinct actions
     for (action in QuickAiAction.values()) {

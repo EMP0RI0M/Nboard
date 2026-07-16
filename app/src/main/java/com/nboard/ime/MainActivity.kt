@@ -154,6 +154,10 @@ class MainActivity : AppCompatActivity() {
             showApiKeyDialog()
         }
 
+                findViewById<View>(R.id.searxngUrlRow).setOnClickListener {
+            showSearxngUrlDialog()
+        }
+
         findViewById<View>(R.id.wordPredictionRow).setOnClickListener {
             showWordPredictionDialog()
         }
