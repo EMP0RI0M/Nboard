@@ -409,7 +409,8 @@ class NboardImeService : InputMethodService() {
         val aiProvider = KeyboardModeSettings.loadAiProvider(this)
         if (aiProvider == AiProvider.OPENROUTER) {
             val storedKey = KeyboardModeSettings.loadOpenRouterApiKey(this)
-            aiClient = OpenRouterClient(storedKey)
+            val storedModel = KeyboardModeSettings.loadOpenRouterModel(this)
+            aiClient = OpenRouterClient(storedKey, storedModel)
         } else {
             val storedKey = KeyboardModeSettings.loadGeminiApiKey(this)
             val apiKey = storedKey.ifBlank { BuildConfig.GEMINI_API_KEY }

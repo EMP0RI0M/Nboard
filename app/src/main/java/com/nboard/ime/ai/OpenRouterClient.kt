@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class OpenRouterClient(private val apiKey: String) : AiClient {
+class OpenRouterClient(private val apiKey: String, private val userModel: String = "") : AiClient {
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -31,7 +31,14 @@ class OpenRouterClient(private val apiKey: String) : AiClient {
         }
 
         var lastNotFoundError: Exception? = null
-        MODEL_FALLBACKS.forEach { model ->
+        
+        val modelsToTry = if (userModel.isNotBlank()) {
+            listOf(userModel) + MODEL_FALLBACKS
+        } else {
+            MODEL_FALLBACKS
+        }
+
+        modelsToTry.forEach { model ->
             val result = generateWithModel(prompt, model, systemInstruction, outputCharLimit)
             if (result.isSuccess) {
                 return@withContext result

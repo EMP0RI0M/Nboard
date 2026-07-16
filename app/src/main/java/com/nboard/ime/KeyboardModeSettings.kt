@@ -61,6 +61,7 @@ object KeyboardModeSettings {
     private const val KEY_LANGUAGE_MODE = "keyboard_language_mode"
     private const val KEY_API_KEY = "gemini_api_key"
     private const val KEY_OPENROUTER_API_KEY = "openrouter_api_key"
+    private const val KEY_OPENROUTER_MODEL = "openrouter_model"
     private const val KEY_AI_PROVIDER = "ai_provider"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_FONT_MODE = "font_mode"
@@ -221,6 +222,19 @@ object KeyboardModeSettings {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_OPENROUTER_API_KEY, value.trim())
+            .apply()
+    }
+
+    fun loadOpenRouterModel(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_OPENROUTER_MODEL, "")
+            .orEmpty()
+    }
+
+    fun saveOpenRouterModel(context: Context, value: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_OPENROUTER_MODEL, value.trim())
             .apply()
     }
 

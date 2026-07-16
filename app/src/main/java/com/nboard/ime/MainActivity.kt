@@ -351,12 +351,36 @@ class MainActivity : AppCompatActivity() {
                 val newKey = input.text?.toString().orEmpty()
                 if (isGemini) {
                     KeyboardModeSettings.saveGeminiApiKey(this, newKey)
+                    refreshValues()
                 } else {
                     KeyboardModeSettings.saveOpenRouterApiKey(this, newKey)
+                    showOpenRouterModelDialog()
                 }
-                refreshValues()
             }
             .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showOpenRouterModelDialog() {
+        val currentModel = KeyboardModeSettings.loadOpenRouterModel(this)
+        val input = EditText(this).apply {
+            setText(currentModel)
+            hint = "e.g. google/gemini-2.5-flash"
+            inputType = InputType.TYPE_CLASS_TEXT
+            setSelection(text.length)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Set OpenRouter Model (Optional)")
+            .setMessage("Leave blank to use default fallback models.")
+            .setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                KeyboardModeSettings.saveOpenRouterModel(this, input.text?.toString().orEmpty())
+                refreshValues()
+            }
+            .setNegativeButton("Cancel") { _, _ -> 
+                refreshValues()
+            }
             .show()
     }
 
