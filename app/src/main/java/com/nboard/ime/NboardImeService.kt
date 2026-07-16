@@ -85,7 +85,9 @@ import java.util.Locale
 
 class NboardImeService : InputMethodService() {
     internal val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private lateinit var keyboardUiContext: Context
+    internal lateinit var keyboardUiContext: Context
+
+    internal fun isAiSmartActionsInitialized() = this::aiSmartActionsScroll.isInitialized
 
     internal var clipboardManager: ClipboardManager? = null
     internal var vibrator: Vibrator? = null

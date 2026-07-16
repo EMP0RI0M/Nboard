@@ -151,9 +151,6 @@ internal fun NboardImeService.refreshUi() {
     clipboardButton.isEnabled = !gboardLayout && !isGenerating && !(rightBottomMode == BottomKeyMode.AI && !aiAllowed)
     aiPromptToggleButton.isEnabled = aiAllowed && !isGenerating
     aiPromptInput.isEnabled = aiAllowed && !isGenerating
-    aiSummarizeButton.isEnabled = aiAllowed && !isGenerating
-    aiFixGrammarButton.isEnabled = aiAllowed && !isGenerating
-    aiExpandButton.isEnabled = aiAllowed && !isGenerating
 
     setGenerating(isGenerating)
 }
@@ -310,9 +307,6 @@ internal fun NboardImeService.setGenerating(generating: Boolean) {
     rightPunctuationButton.isEnabled = !generating && gboardLayout
     clipboardButton.isEnabled = !gboardLayout && !generating && !(rightBottomMode == BottomKeyMode.AI && !aiAllowed)
     aiPromptToggleButton.isEnabled = aiAllowed && !generating
-    aiSummarizeButton.isEnabled = aiAllowed && !generating
-    aiFixGrammarButton.isEnabled = aiAllowed && !generating
-    aiExpandButton.isEnabled = aiAllowed && !generating
     emojiSearchInput.isEnabled = !generating
     emojiSearchIconButton.isEnabled = !generating
     recentClipboardChip.isEnabled = !generating

@@ -446,20 +446,20 @@ internal fun NboardImeService.buildLanguagePreservingSelectionPrompt(
 
 
 internal fun NboardImeService.updateAiSmartActions() {
-    if (!::aiSmartActionsScroll.isInitialized) return
-    val text = currentInputConnection?.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString().orEmpty()
+    if (!isAiSmartActionsInitialized()) return
+    val currentText = currentInputConnection?.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)?.text?.toString().orEmpty()
     
-    if (text.isBlank() && lastAiOriginalText == null) {
+    if (currentText.isBlank() && lastAiOriginalText == null) {
         aiSmartActionsScroll.isVisible = false
         return
     }
 
     // Intent Prediction / Living Quick Actions
     val actions = mutableListOf<QuickAiAction>()
-    val lower = text.lowercase()
+    val lower = currentText.lowercase()
     
     // Code context (Developer Mode)
-    if (text.contains("{") && (text.contains("def ") || text.contains("fun ") || text.contains("var ") || text.contains("let ") || text.contains("class "))) {
+    if (currentText.contains("{") && (currentText.contains("def ") || currentText.contains("fun ") || currentText.contains("var ") || currentText.contains("let ") || currentText.contains("class "))) {
         actions.add(QuickAiAction.DEBUG_CODE)
         actions.add(QuickAiAction.EXPLAIN_CODE)
         actions.add(QuickAiAction.OPTIMIZE_CODE)
@@ -470,7 +470,7 @@ internal fun NboardImeService.updateAiSmartActions() {
         actions.add(QuickAiAction.GENERATE_DOCS)
     } 
     // Homework / Question context (Student Mode)
-    else if (lower.contains("calculate") || lower.contains("theorem") || lower.contains("what is") || lower.contains("how to") || (lower.contains("explain") && text.contains("?"))) {
+    else if (lower.contains("calculate") || lower.contains("theorem") || lower.contains("what is") || lower.contains("how to") || (lower.contains("explain") && currentText.contains("?"))) {
         actions.add(QuickAiAction.SOLVE_STEP_BY_STEP)
         actions.add(QuickAiAction.EXPLAIN_LIKE_10)
         actions.add(QuickAiAction.CREATE_FLASHCARDS)
@@ -500,7 +500,7 @@ internal fun NboardImeService.updateAiSmartActions() {
         actions.add(QuickAiAction.HUMANIZE)
     }
     // Chat context (Chat Mode)
-    else if (text.length < 150 && !text.contains("\n\n")) {
+    else if (currentText.length < 150 && !currentText.contains("\n\n")) {
         actions.add(QuickAiAction.SMART_REPLY)
         actions.add(QuickAiAction.FUNNY_REPLY)
         actions.add(QuickAiAction.PROFESSIONAL_REPLY)
