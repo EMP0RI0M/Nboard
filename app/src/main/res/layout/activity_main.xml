@@ -638,7 +638,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_search"
-                    app:tint="@color/text_primary" />
+                    android:tint="?android:attr/textColorPrimary" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -935,10 +935,9 @@
             android:textSize="13sp"
             android:textStyle="bold" />
 
+        <!-- Added via script -->
         <LinearLayout
             android:id="@+id/apiKeyRow"
-            <!-- Added via script -->
-
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="10dp"
