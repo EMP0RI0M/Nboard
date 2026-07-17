@@ -28,6 +28,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperty("GEMINI_API_KEY")}\"")
+        externalNativeBuild {
+            cmake {
+                cppFlags += listOf("-O3", "-flto", "-fno-exceptions")
+            }
+        }
     }
 
     buildTypes {
@@ -47,6 +52,13 @@ android {
 
     buildFeatures {
         buildConfig = true
+    }
+    
+    externalNativeBuild {
+        cmake {
+            path("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 }
 
