@@ -755,7 +755,8 @@ class NboardImeService : InputMethodService() {
             refreshUi()
         }
         floatingTranscriptButton.setOnLongClickListener {
-            val popup = android.widget.PopupMenu(this, floatingTranscriptButton)
+            val wrapper = android.view.ContextThemeWrapper(this, android.R.style.Theme_DeviceDefault_Dialog)
+            val popup = android.widget.PopupMenu(wrapper, floatingTranscriptButton)
             popup.menu.add("Copy Transcript")
             popup.menu.add("Clear Transcript")
             popup.menu.add("Export Transcript")
