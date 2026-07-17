@@ -444,6 +444,27 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun showSearxngUrlDialog() {
+        val input = android.widget.EditText(this)
+        input.setText(KeyboardModeSettings.loadSearxngUrl(this))
+        input.setHint("https://searx.be")
+        
+        val padding = resources.getDimensionPixelSize(R.dimen.dialog_padding)
+        val container = android.widget.FrameLayout(this)
+        container.setPadding(padding, padding, padding, padding)
+        container.addView(input)
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("SearXNG URL")
+            .setView(container)
+            .setPositiveButton("Save") { _, _ ->
+                KeyboardModeSettings.saveSearxngUrl(this, input.text.toString().trim())
+                refreshValues()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun showWordPredictionDialog() {
         val enabled = KeyboardModeSettings.loadWordPredictionEnabled(this)
         val options = arrayOf("Enabled", "Disabled")

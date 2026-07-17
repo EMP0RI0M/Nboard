@@ -3,7 +3,9 @@ package com.nboard.ime
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import androidx.core.view.isVisible
+import com.nboard.ime.ai.SearxngClient
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal fun NboardImeService.syncAiProcessingAnimations() {
     val shouldAnimate = isGenerating && isAiMode && aiPromptRow.isVisible
