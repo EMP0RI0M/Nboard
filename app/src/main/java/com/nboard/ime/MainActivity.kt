@@ -445,18 +445,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSearxngUrlDialog() {
-        val input = android.widget.EditText(this)
-        input.setText(KeyboardModeSettings.loadSearxngUrl(this))
-        input.setHint("https://searx.be")
-        
-        val padding = resources.getDimensionPixelSize(R.dimen.dialog_padding)
-        val container = android.widget.FrameLayout(this)
-        container.setPadding(padding, padding, padding, padding)
-        container.addView(input)
+        val input = android.widget.EditText(this).apply {
+            setText(KeyboardModeSettings.loadSearxngUrl(this@MainActivity))
+            hint = "https://searx.be"
+            setPadding(
+                (16 * resources.displayMetrics.density).toInt(),
+                (16 * resources.displayMetrics.density).toInt(),
+                (16 * resources.displayMetrics.density).toInt(),
+                (16 * resources.displayMetrics.density).toInt()
+            )
+        }
 
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("SearXNG URL")
-            .setView(container)
+            .setView(input)
             .setPositiveButton("Save") { _, _ ->
                 KeyboardModeSettings.saveSearxngUrl(this, input.text.toString().trim())
                 refreshValues()
