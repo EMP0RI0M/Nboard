@@ -86,91 +86,156 @@ internal fun NboardImeService.refreshVoiceUiState() {
         }
     }
 
-internal fun NboardImeService.startVoiceInput() {
-        if (isVoiceListening || isVoiceStopping || !isVoiceInputLongPressAvailable()) {
-            return
-        }
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            toast("Voice input is not available on this device")
-            return
-        }
-        if (!hasRecordAudioPermission()) {
-            toast("Enable microphone permission for Nboard in app settings")
-            return
-        }
+internal var globalWhisperRecorder: WhisperAudioRecorder? = null
+internal var globalWhisperContext: com.whispercpp.whisper.WhisperContext? = null
 
-        val recognizer = ensureVoiceRecognizer() ?: return
-        cancelVoiceStopJobs()
-        resetVoiceTranscriptState()
-        voiceLeadingPrefix = computeVoiceLeadingPrefix()
-        voiceShouldAutoRestart = true
-        isVoiceStopping = false
-        isVoiceListening = true
-        refreshVoiceUiState()
-        runCatching {
-            recognizer.startListening(buildVoiceRecognizerIntent())
-        }.onFailure {
-            Log.w(TAG, "Failed to start voice input", it)
-            voiceShouldAutoRestart = false
-            isVoiceListening = false
-            isVoiceStopping = false
-            refreshVoiceUiState()
-        }
+internal fun NboardImeService.startVoiceInput() {
+    if (isVoiceListening || isVoiceStopping || !isVoiceInputLongPressAvailable()) {
+        return
     }
+    if (!hasRecordAudioPermission()) {
+        toast("Enable microphone permission for Nboard in app settings")
+        return
+    }
+
+    val modelFile = java.io.File(filesDir, "ggml-tiny.bin")
+    if (modelFile.exists()) {
+        startWhisperInput(modelFile.absolutePath)
+        return
+    }
+
+    // Fallback to Google Recognizer
+    val recognizer = ensureVoiceRecognizer() ?: return
+    cancelVoiceStopJobs()
+    resetVoiceTranscriptState()
+    voiceLeadingPrefix = computeVoiceLeadingPrefix()
+    voiceShouldAutoRestart = true
+    isVoiceStopping = false
+    isVoiceListening = true
+    refreshVoiceUiState()
+    runCatching {
+        recognizer.startListening(buildVoiceRecognizerIntent())
+    }.onFailure {
+        Log.w(TAG, "Failed to start voice input", it)
+        voiceShouldAutoRestart = false
+        isVoiceListening = false
+        isVoiceStopping = false
+        refreshVoiceUiState()
+    }
+}
+
+internal fun NboardImeService.startWhisperInput(modelPath: String) {
+    if (globalWhisperContext == null) {
+        globalWhisperContext = com.whispercpp.whisper.WhisperContext.createContextFromFile(modelPath)
+    }
+    
+    if (globalWhisperRecorder == null) {
+        globalWhisperRecorder = WhisperAudioRecorder()
+    }
+    
+    globalWhisperRecorder?.startRecording(serviceScope)
+    
+    voiceLeadingPrefix = computeVoiceLeadingPrefix()
+    isVoiceStopping = false
+    isVoiceListening = true
+    refreshVoiceUiState()
+}
 
 internal fun NboardImeService.stopVoiceInput(forceCancel: Boolean) {
-        val recognizer = activeVoiceRecognizer
-        if (!forceCancel && !isVoiceListening && !isVoiceStopping) {
-            return
-        }
-        cancelVoiceStopJobs()
-        voiceShouldAutoRestart = false
+    if (globalWhisperRecorder != null) {
+        stopWhisperInput(forceCancel)
+        return
+    }
 
-        if (forceCancel) {
-            isVoiceListening = false
-            isVoiceStopping = false
-            runCatching {
-                recognizer?.cancel()
-            }.onFailure {
-                Log.w(TAG, "Failed to cancel voice input", it)
-            }
-            finalizeVoiceComposition()
-            resetVoiceTranscriptState()
-            refreshVoiceUiState()
-            return
-        }
+    val recognizer = activeVoiceRecognizer
+    if (!forceCancel && !isVoiceListening && !isVoiceStopping) {
+        return
+    }
+    cancelVoiceStopJobs()
+    voiceShouldAutoRestart = false
 
-        if (isVoiceStopping) {
-            return
+    if (forceCancel) {
+        isVoiceListening = false
+        isVoiceStopping = false
+        runCatching {
+            recognizer?.cancel()
+        }.onFailure {
+            Log.w(TAG, "Failed to cancel voice input", it)
         }
-
-        if (recognizer == null) {
-            if (voiceLastTranscript.isNotBlank()) {
-                commitVoiceTranscript(voiceLastTranscript, isFinal = true)
-            } else {
-                finalizeVoiceComposition()
-            }
-            isVoiceListening = false
-            isVoiceStopping = false
-            resetVoiceTranscriptState()
-            refreshVoiceUiState()
-            return
-        }
-
-        isVoiceStopping = true
+        finalizeVoiceComposition()
+        resetVoiceTranscriptState()
         refreshVoiceUiState()
-        voiceReleaseStopJob = serviceScope.launch(Dispatchers.Main) {
-            delay(VOICE_RELEASE_GRACE_MS)
-            runCatching {
-                recognizer.stopListening()
-            }.onFailure {
-                Log.w(TAG, "Failed to stop voice input", it)
-            }
+        return
+    }
+
+    if (isVoiceStopping) {
+        return
+    }
+
+    if (recognizer == null) {
+        if (voiceLastTranscript.isNotBlank()) {
+            commitVoiceTranscript(voiceLastTranscript, isFinal = true)
+        } else {
+            finalizeVoiceComposition()
+        }
+        isVoiceListening = false
+        isVoiceStopping = false
+        resetVoiceTranscriptState()
+        refreshVoiceUiState()
+        return
+    }
+
+    isVoiceStopping = true
+    refreshVoiceUiState()
+    runCatching {
+        recognizer.stopListening()
+    }.onFailure {
+        Log.w(TAG, "Failed to stop voice input", it)
+        isVoiceStopping = false
+        isVoiceListening = false
+        refreshVoiceUiState()
+    }
+}
+
+internal fun NboardImeService.stopWhisperInput(forceCancel: Boolean) {
+    if (forceCancel) {
+        serviceScope.launch {
+            globalWhisperRecorder?.stopRecordingAndGetFloatArray()
             isVoiceListening = false
-            syncVoiceInputGlowAnimation()
-            scheduleVoiceFinalizeFallback()
+            isVoiceStopping = false
+            resetVoiceTranscriptState()
+            refreshVoiceUiState()
+        }
+        return
+    }
+    
+    isVoiceStopping = true
+    refreshVoiceUiState()
+    
+    serviceScope.launch {
+        val audioData = globalWhisperRecorder?.stopRecordingAndGetFloatArray() ?: FloatArray(0)
+        if (audioData.isNotEmpty() && globalWhisperContext != null) {
+            val transcript = globalWhisperContext!!.transcribeData(audioData, false)
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                if (transcript.isNotBlank()) {
+                    commitVoiceTranscript(transcript, isFinal = true)
+                }
+                finalizeVoiceComposition()
+                isVoiceListening = false
+                isVoiceStopping = false
+                resetVoiceTranscriptState()
+                refreshVoiceUiState()
+            }
+        } else {
+            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                isVoiceListening = false
+                isVoiceStopping = false
+                resetVoiceTranscriptState()
+                refreshVoiceUiState()
+            }
         }
     }
+}
 
 internal fun NboardImeService.cancelVoiceStopJobs() {
         voiceReleaseStopJob?.cancel()
