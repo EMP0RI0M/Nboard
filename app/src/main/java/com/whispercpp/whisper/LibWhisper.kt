@@ -117,15 +117,19 @@ private class WhisperLib {
                 }
             }
 
-            if (loadVfpv4) {
-                Log.d(LOG_TAG, "Loading libwhisper_vfpv4.so")
-                System.loadLibrary("whisper_vfpv4")
-            } else if (loadV8fp16) {
-                Log.d(LOG_TAG, "Loading libwhisper_v8fp16_va.so")
-                System.loadLibrary("whisper_v8fp16_va")
-            } else {
-                Log.d(LOG_TAG, "Loading libwhisper.so")
-                System.loadLibrary("whisper")
+            try {
+                if (loadVfpv4) {
+                    Log.d(LOG_TAG, "Loading libwhisper_vfpv4.so")
+                    System.loadLibrary("whisper_vfpv4")
+                } else if (loadV8fp16) {
+                    Log.d(LOG_TAG, "Loading libwhisper_v8fp16_va.so")
+                    System.loadLibrary("whisper_v8fp16_va")
+                } else {
+                    Log.d(LOG_TAG, "Loading libwhisper.so")
+                    System.loadLibrary("whisper")
+                }
+            } catch (t: Throwable) {
+                Log.e(LOG_TAG, "Failed to load whisper native library. Voice input will not work.", t)
             }
         }
 

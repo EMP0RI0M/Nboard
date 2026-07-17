@@ -127,7 +127,16 @@ internal fun NboardImeService.startVoiceInput() {
 
 internal fun NboardImeService.startWhisperInput(modelPath: String) {
     if (globalWhisperContext == null) {
-        globalWhisperContext = com.whispercpp.whisper.WhisperContext.createContextFromFile(modelPath)
+        runCatching {
+            globalWhisperContext = com.whispercpp.whisper.WhisperContext.createContextFromFile(modelPath)
+        }.onFailure {
+            Log.e(TAG, "Failed to load Whisper Context. Check native libraries.", it)
+        }
+    }
+    
+    if (globalWhisperContext == null) {
+        toast("Failed to initialize offline transcription.")
+        return
     }
     
     if (globalWhisperRecorder == null) {
