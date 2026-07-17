@@ -111,6 +111,11 @@ class NboardImeService : InputMethodService() {
     internal lateinit var clipboardPanel: LinearLayout
     internal lateinit var clipboardItemsContainer: LinearLayout
 
+    internal lateinit var floatingTranscriptButton: LinearLayout
+    internal lateinit var floatingTranscriptLabel: TextView
+    internal lateinit var transcriptPanel: LinearLayout
+    internal lateinit var transcriptPanelText: TextView
+
     internal lateinit var emojiPanel: LinearLayout
     internal lateinit var emojiSearchPill: LinearLayout
     internal lateinit var emojiSearchIconButton: ImageButton
@@ -225,6 +230,7 @@ class NboardImeService : InputMethodService() {
     internal var voiceHasActiveComposition = false
     internal var voiceReleaseStopJob: Job? = null
     internal var voiceFinalizeFallbackJob: Job? = null
+    internal var isTranscriptPanelOpen = false
     private var activeEditorPackage: String? = null
     internal var smartTypingBehavior = SmartTypingBehavior(0)
     internal var pendingAutoInsertedSentenceSpace = false
@@ -522,6 +528,11 @@ class NboardImeService : InputMethodService() {
         clipboardPanel = root.findViewById(R.id.clipboardPanel)
         clipboardItemsContainer = root.findViewById(R.id.clipboardItemsContainer)
 
+        floatingTranscriptButton = root.findViewById(R.id.floatingTranscriptButton)
+        floatingTranscriptLabel = root.findViewById(R.id.floatingTranscriptLabel)
+        transcriptPanel = root.findViewById(R.id.transcriptPanel)
+        transcriptPanelText = root.findViewById(R.id.transcriptPanelText)
+
         emojiPanel = root.findViewById(R.id.emojiPanel)
         emojiSearchPill = root.findViewById(R.id.emojiSearchPill)
         emojiSearchIconButton = root.findViewById(R.id.emojiSearchIconButton)
@@ -739,6 +750,44 @@ class NboardImeService : InputMethodService() {
     }
 
     private fun bindListeners() {
+        floatingTranscriptButton.setOnClickListener {
+            isTranscriptPanelOpen = !isTranscriptPanelOpen
+            refreshUi()
+        }
+        floatingTranscriptButton.setOnLongClickListener {
+            val popup = android.widget.PopupMenu(this, floatingTranscriptButton)
+            popup.menu.add("Copy Transcript")
+            popup.menu.add("Clear Transcript")
+            popup.menu.add("Export Transcript")
+            popup.setOnMenuItemClickListener { item ->
+                when (item.title) {
+                    "Copy Transcript" -> {
+                        val clip = android.content.ClipData.newPlainText("transcript", voiceLastTranscript)
+                        clipboardManager?.setPrimaryClip(clip)
+                        toast("Transcript copied")
+                    }
+                    "Clear Transcript" -> {
+                        voiceLastTranscript = ""
+                        isTranscriptPanelOpen = false
+                        refreshUi()
+                    }
+                    "Export Transcript" -> {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, voiceLastTranscript)
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        startActivity(android.content.Intent.createChooser(intent, "Export Transcript").apply {
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        })
+                    }
+                }
+                true
+            }
+            popup.show()
+            true
+        }
+
         bindPressAction(modeSwitchButton) {
             dismissActivePopup()
             if (isEmojiMode) {
@@ -866,6 +915,8 @@ class NboardImeService : InputMethodService() {
             } else if (isClipboardOpen) {
                 deleteOneCharacter()
             } else if (isEmojiMode) {
+                deleteOneCharacter()
+            } else if (isTranscriptPanelOpen) {
                 deleteOneCharacter()
             } else {
                 sendOrEnter()

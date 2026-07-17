@@ -454,6 +454,7 @@ internal fun NboardImeService.commitVoiceTranscript(transcript: String, isFinal:
         voiceLastTranscript = normalized
         pendingAutoCorrection = null
         refreshAutoShiftFromContextAndRerender()
+        refreshUi()
     }
 
 internal fun NboardImeService.finalizeVoiceComposition() {
@@ -473,10 +474,11 @@ internal fun NboardImeService.computeVoiceLeadingPrefix(): String {
     }
 
 internal fun NboardImeService.resetVoiceTranscriptState() {
-        voiceLastTranscript = ""
-        voiceLeadingPrefix = ""
-        voiceHasActiveComposition = false
-    }
+    voiceLastTranscript = ""
+    voiceLeadingPrefix = ""
+    voiceHasActiveComposition = false
+    refreshUi()
+}
 
 internal fun NboardImeService.hasRecordAudioPermission(): Boolean {
         return ContextCompat.checkSelfPermission(

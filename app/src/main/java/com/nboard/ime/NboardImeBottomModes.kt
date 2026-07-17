@@ -92,7 +92,39 @@ internal fun NboardImeService.refreshUi() {
     setVisibleAnimated(emojiPanel, isEmojiMode)
     setVisibleAnimated(recentClipboardRow, shouldShowRecentClipboardRow())
     setVisibleAnimated(predictionRow, shouldShowPredictionRow() && hasPredictionSuggestions)
-    setVisibleAnimated(keyRowsContainer, !isClipboardOpen && (!isEmojiMode || isEmojiSearchMode))
+    setVisibleAnimated(keyRowsContainer, !isClipboardOpen && (!isEmojiMode || isEmojiSearchMode) && !isTranscriptPanelOpen)
+    setVisibleAnimated(transcriptPanel, isTranscriptPanelOpen)
+
+    val transcriptAvailable = voiceLastTranscript.isNotBlank()
+    if (transcriptAvailable && !isEmojiMode) {
+        if (!floatingTranscriptButton.isVisible) {
+            floatingTranscriptButton.isVisible = true
+            floatingTranscriptButton.animate().cancel()
+            floatingTranscriptButton.translationY = dp(4).toFloat()
+            floatingTranscriptButton.alpha = 0f
+            floatingTranscriptButton.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(150L)
+                .start()
+        }
+    } else {
+        if (floatingTranscriptButton.isVisible && floatingTranscriptButton.alpha > 0f) {
+            floatingTranscriptButton.animate().cancel()
+            floatingTranscriptButton.animate()
+                .alpha(0f)
+                .translationY(dp(4).toFloat())
+                .setDuration(150L)
+                .withEndAction {
+                    floatingTranscriptButton.isVisible = false
+                }
+                .start()
+        }
+    }
+
+    if (isTranscriptPanelOpen) {
+        transcriptPanelText.text = voiceLastTranscript.ifBlank { "No transcript available yet." }
+    }
 
     val gboardLayout = isGboardLayoutActive()
     setVisibleAnimated(modeSwitchButton, gboardLayout || !isClipboardOpen)
@@ -133,7 +165,7 @@ internal fun NboardImeService.refreshUi() {
     } else if (isAiMode) {
         actionButton.background = uiDrawable(R.drawable.bg_ai_button)
         setIcon(actionButton, R.drawable.ic_circle_arrow_right_lucide, R.color.ai_text)
-    } else if (isClipboardOpen) {
+    } else if (isClipboardOpen || isTranscriptPanelOpen) {
         actionButton.background = uiDrawable(R.drawable.bg_special_key)
         setIcon(actionButton, R.drawable.ic_move_left_lucide, R.color.key_text)
     } else if (isEmojiMode) {
