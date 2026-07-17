@@ -637,7 +637,7 @@
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_search"
+                    android:src="@drawable/ic_search_lucide"
                     android:tint="?android:attr/textColorPrimary" />
 
                 <TextView
