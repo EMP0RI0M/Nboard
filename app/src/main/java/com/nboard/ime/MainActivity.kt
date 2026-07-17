@@ -15,6 +15,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -85,6 +89,44 @@ class MainActivity : AppCompatActivity() {
         bindActions()
         refreshValues()
         maybeShowFirstLaunchOnboarding()
+    }
+
+    private fun downloadWhisperModel() {
+        val modelFile = java.io.File(filesDir, "ggml-tiny.bin")
+        if (modelFile.exists()) {
+            android.widget.Toast.makeText(this, "Model already downloaded!", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        android.widget.Toast.makeText(this, "Downloading Whisper model (75MB)...", android.widget.Toast.LENGTH_LONG).show()
+        
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val url = java.net.URL("https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin")
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.connect()
+
+                if (connection.responseCode == java.net.HttpURLConnection.HTTP_OK) {
+                    val input = connection.inputStream
+                    val output = java.io.FileOutputStream(modelFile)
+                    input.copyTo(output)
+                    output.close()
+                    input.close()
+                    
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        android.widget.Toast.makeText(this@MainActivity, "Download complete!", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    android.widget.Toast.makeText(this@MainActivity, "Download failed: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -164,6 +206,10 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.swipeTypingRow).setOnClickListener {
             showSwipeTypingDialog()
+        }
+
+        findViewById<View>(R.id.whisperModelRow).setOnClickListener {
+            downloadWhisperModel()
         }
 
         swipeTrailRow.setOnClickListener {
